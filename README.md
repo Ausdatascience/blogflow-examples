@@ -1,8 +1,37 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## BlogFlow SDK Examples
+
+This project demonstrates how to use the [@blogflow/sdk](https://www.npmjs.com/package/@blogflow/sdk) with access card configuration using the official recommended methods.
+
+### Features
+
+- ✅ BlogFlow SDK integration with `BlogFlowProvider`
+- ✅ Access card styling configuration (border, radius, shadow, color)
+- ✅ Multiple view modes (grid, card, list, masonry, waterfall, etc.)
+- ✅ Multiple themes (default, blue, minimal, modern, dark, etc.)
+- ✅ Card content display controls (excerpt, category, date)
+- ✅ Multi-language support (en, zh, es, fr, de, ja, ko)
+
 ## Getting Started
 
-First, run the development server:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Set Up Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```bash
+NEXT_PUBLIC_BLOGFLOW_API_KEY=your_api_key_here
+```
+
+Get your API key from: https://blogflow-api-server.vercel.app
+
+### 3. Run the Development Server
 
 ```bash
 npm run dev
@@ -16,7 +45,13 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Configure Access Cards
+
+The page includes a control panel where you can:
+- Select different themes
+- Choose view modes
+- Adjust card border width, radius, color, and shadow
+- Toggle card content display (excerpt, category, date)
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
