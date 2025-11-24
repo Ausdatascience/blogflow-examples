@@ -1,8 +1,8 @@
 {
   "title": "BlogFlow Showcase",
   "description": "Latest articles powered by the BlogFlow SDK.",
-  "theme": "default",
-  "viewMode": "masonry",
+  "theme": "cyanblue",
+  "viewMode": "grid",
   "language": "en",
   "paginationVariant": "simple",
   "pageSize": 12,
