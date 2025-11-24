@@ -1,7 +1,7 @@
 import { BlogFlow } from "@blogflow/sdk/core";
-import siteConfig from "@/config.json";
-import { Client, type SiteConfig } from "./Client";
+import { ExamplesClient } from "./AdminClient";
 
+// Create client instance (reused across requests)
 function getClient() {
   return new BlogFlow({
     apiKey: process.env.BLOGFLOW_API_KEY || process.env.NEXT_PUBLIC_BLOGFLOW_API_KEY || "",
@@ -11,37 +11,34 @@ function getClient() {
 
 export default async function HomePage() {
   const client = getClient();
-  const config = siteConfig as SiteConfig;
-  const pageSize = config.pageSize ?? 12;
 
   try {
+    // Fetch initial posts on server with ISR caching (revalidate every 5 minutes)
     const response = await client.getPaginatedPosts({
-      lang: config.language,
+      lang: "en",
       page: 1,
-      pageSize,
-      next: { revalidate: config.revalidateSeconds ?? 300 },
+      pageSize: 12,
+      next: { revalidate: 300 }, // Cache for 5 minutes
     });
 
-    return (
-      <Client
+  return (
+      <ExamplesClient
         initialPosts={response.items}
         initialTotalCount={response.totalCount}
         initialTotalPages={response.totalPages}
         initialPage={response.page}
-        config={config}
       />
     );
   } catch (error) {
+    // If server fetch fails, still render client component (it will handle errors)
     console.error("Error fetching initial posts:", error);
     return (
-      <Client
+      <ExamplesClient
         initialPosts={[]}
         initialTotalCount={0}
         initialTotalPages={1}
         initialPage={1}
-        config={config}
       />
-    );
+  );
   }
 }
-

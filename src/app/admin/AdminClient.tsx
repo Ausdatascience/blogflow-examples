@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   BlogFlowProvider,
@@ -8,13 +8,12 @@ import {
   BlogSearch,
   Pagination,
   type PaginationVariant,
-  useBlogPost,
   useBlogPosts,
   type SupportedLanguage,
 } from "@blogflow/sdk/react";
-import { SocialShareToolbar } from "@/components/SocialShareToolbar";
+import { PostDetail } from "@/components/PostDetail";
 import type { V2PostListItem } from "@blogflow/sdk/core";
-import { Search, X } from "lucide-react";
+import { Search, X, Save, Check } from "lucide-react";
 
 type ThemeName =
   | "default"
@@ -134,6 +133,8 @@ export function ExamplesClient({
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [accordionState, setAccordionState] = useState({
     appearance: true,
     content: true,
@@ -141,7 +142,34 @@ export function ExamplesClient({
 
   useEffect(() => {
     setIsMounted(true);
+    // Load initial config from config.json
+    loadConfig();
   }, []);
+
+  const loadConfig = async () => {
+    try {
+      const response = await fetch("/admin/api/config");
+      if (response.ok) {
+        const config = await response.json();
+        setTheme(config.theme || "default");
+        setViewMode(config.viewMode || "grid");
+        setLanguage(config.language || "en");
+        setPaginationVariant(config.paginationVariant || "icon");
+        setCardBorderWidth(config.card?.borderWidth ?? 1);
+        setCardBorderRadius(config.card?.borderRadius ?? 0.75);
+        setCardBorderColor(config.card?.borderColor || "");
+        setCardShadow(config.card?.shadow ?? 1);
+        setShowExcerpt(config.content?.showExcerpt ?? true);
+        setShowCategory(config.content?.showCategory ?? true);
+        setShowDate(config.content?.showDate ?? true);
+        setShowTitle(config.content?.showListTitle ?? true);
+        setShowCardTitle(config.content?.showCardTitle ?? true);
+        setShowSearchBar(config.search?.enabled ?? false);
+      }
+    } catch (error) {
+      console.error("Error loading config:", error);
+    }
+  };
 
 useEffect(() => {
   setCurrentPage(1);
@@ -173,20 +201,79 @@ useEffect(() => {
     }
   };
 
-  return (
-    <BlogFlowProvider
-      config={{
-        apiKey: process.env.NEXT_PUBLIC_BLOGFLOW_API_KEY || "",
-        styles: {
-          theme,
-          autoInject: true,
-          cardBorderWidth: `${cardBorderWidth}px`,
-          cardBorderRadius: `${cardBorderRadius}rem`,
-          cardBorderColor: cardBorderColor || undefined,
-          cardShadow,
+  const handleSaveConfig = async () => {
+    setSaving(true);
+    setSaveSuccess(false);
+
+    try {
+      const config = {
+        title: "BlogFlow Showcase",
+        description: "Latest articles powered by the BlogFlow SDK.",
+        theme,
+        viewMode,
+        language,
+        paginationVariant,
+        pageSize: 12,
+        revalidateSeconds: 300,
+        search: {
+          enabled: showSearchBar,
         },
-      }}
-    >
+        card: {
+          borderWidth: cardBorderWidth,
+          borderRadius: cardBorderRadius,
+          borderColor: cardBorderColor || "",
+          shadow: cardShadow,
+        },
+        content: {
+          showExcerpt,
+          showCategory,
+          showDate,
+          showListTitle: showTitle,
+          showCardTitle,
+        },
+      };
+
+      const response = await fetch("/admin/api/config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(config),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save config");
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error("Error saving config:", error);
+      alert("Failed to save config. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Use useMemo to ensure config object is recreated when style values change
+  // This ensures BlogFlowProvider detects the changes and updates styles
+  const providerConfig = useMemo(
+    () => ({
+      apiKey: process.env.NEXT_PUBLIC_BLOGFLOW_API_KEY || "",
+      styles: {
+        theme,
+        autoInject: true,
+        cardBorderWidth: `${cardBorderWidth}px`,
+        cardBorderRadius: `${cardBorderRadius}rem`,
+        cardBorderColor: cardBorderColor || undefined,
+        cardShadow: cardShadow,
+      },
+    }),
+    [theme, cardBorderWidth, cardBorderRadius, cardBorderColor, cardShadow]
+  );
+
+  return (
+    <BlogFlowProvider config={providerConfig}>
       <div
         className="min-h-screen transition-colors duration-300"
         style={{
@@ -196,18 +283,55 @@ useEffect(() => {
       >
         <main className="container mx-auto px-4 py-8 max-w-7xl">
           <header className="mb-8">
-            <h1
-              className="text-4xl font-bold mb-2"
-              style={{ color: "var(--blogflow-text, #0f172a)" }}
-            >
-              BlogFlow SDK Examples
-            </h1>
-            <p
-              className="text-lg"
-              style={{ color: "var(--blogflow-text-secondary, #475569)" }}
-            >
-              Explore the React components and card styling APIs.
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1
+                  className="text-4xl font-bold mb-2"
+                  style={{ color: "var(--blogflow-text, #0f172a)" }}
+                >
+                  BlogFlow SDK Examples
+                </h1>
+                <p
+                  className="text-lg"
+                  style={{ color: "var(--blogflow-text-secondary, #475569)" }}
+                >
+                  Explore the React components and card styling APIs.
+                </p>
+              </div>
+              <button
+                onClick={handleSaveConfig}
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border transition-colors font-medium"
+                style={{
+                  backgroundColor: saveSuccess
+                    ? "var(--blogflow-primary, #06b6d4)"
+                    : saving
+                    ? "var(--blogflow-bg-hover, rgba(5, 13, 31, 0.5))"
+                    : "var(--blogflow-primary, #06b6d4)",
+                  color: "#ffffff",
+                  borderColor: "var(--blogflow-border, #1f2937)",
+                  opacity: saving ? 0.6 : 1,
+                  cursor: saving ? "not-allowed" : "pointer",
+                }}
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : saveSuccess ? (
+                  <>
+                    <Check className="w-5 h-5" />
+                    Saved!
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    Save Config
+                  </>
+                )}
+              </button>
+            </div>
           </header>
 
           <div className="mb-8 space-y-4">
@@ -386,7 +510,7 @@ useEffect(() => {
 
           {isMounted && isModalOpen && selectedSlug
             ? createPortal(
-                <PostModal
+                <PostDetail
                   slug={selectedSlug}
                   language={language}
                   onClose={handleCloseModal}
@@ -545,143 +669,6 @@ function BlogContent({
   );
 }
 
-function PostModal({
-  slug,
-  language,
-  onClose,
-}: {
-  slug: string;
-  language: SupportedLanguage;
-  onClose: () => void;
-}) {
-  const { post, loading, error } = useBlogPost(slug, {
-    lang: language,
-    autoFetch: true,
-  });
-
-  const shareUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/posts/${slug}`
-      : slug;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border shadow-2xl transition-colors duration-300"
-        style={{
-          background: "var(--blogflow-bg, #0f172a)",
-          borderColor: "var(--blogflow-border, rgba(148, 163, 184, 0.3))",
-          color: "var(--blogflow-text, #e2e8f0)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 rounded-full px-3 py-1 text-sm transition-colors"
-          style={{
-            background: "var(--blogflow-bg-hover, rgba(255,255,255,0.1))",
-            color: "var(--blogflow-text, #e2e8f0)",
-          }}
-        >
-          Close
-        </button>
-
-        <div className="p-6 md:p-8 space-y-6">
-          {loading && (
-            <div className="flex justify-center py-16">
-              <div
-                className="h-12 w-12 animate-spin rounded-full border-4"
-                style={{
-                  borderColor: "var(--blogflow-border, rgba(255,255,255,0.2))",
-                  borderTopColor: "var(--blogflow-primary, #38bdf8)",
-                }}
-              />
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-6 text-center">
-              <p className="text-red-100">Failed to load article: {error}</p>
-            </div>
-          )}
-
-          {!loading && !error && post && (
-            <article className="space-y-4">
-              <SocialShareToolbar
-                url={shareUrl}
-                title={post.title}
-                description={post.excerpt || ""}
-                language={language}
-                position="top"
-              />
-              <div className="space-y-2">
-                {post.category && (
-                  <span
-                    className="inline-block rounded-full px-4 py-1 text-sm font-semibold"
-                    style={{
-                      background: "var(--blogflow-category-bg, #1d4ed8)",
-                      color: "var(--blogflow-category-text, #fff)",
-                    }}
-                  >
-                    {post.category}
-                  </span>
-                )}
-                <h1 className="text-3xl font-bold">{post.title}</h1>
-                {post.created_at && (
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--blogflow-text-secondary, #94a3b8)" }}
-                  >
-                    {new Date(post.created_at).toLocaleDateString(
-                      language === "zh" ? "zh-CN" : "en-US",
-                      { year: "numeric", month: "long", day: "numeric" }
-                    )}
-                  </p>
-                )}
-              </div>
-
-              {post.excerpt && (
-                <p
-                  className="text-lg"
-                  style={{ color: "var(--blogflow-text-secondary, #cbd5f5)" }}
-                >
-                  {post.excerpt}
-                </p>
-              )}
-
-              {post.featured_image_url && (
-                <div className="overflow-hidden rounded-xl border border-white/10">
-                  <img
-                    src={post.featured_image_url}
-                    alt={post.title}
-                    className="w-full object-cover"
-                  />
-                </div>
-              )}
-
-              <div
-                className="prose prose-invert max-w-none"
-                style={{ color: "var(--blogflow-text, #e2e8f0)" }}
-                dangerouslySetInnerHTML={{ __html: post.content }}
-              />
-              <SocialShareToolbar
-                url={shareUrl}
-                title={post.title}
-                description={post.excerpt || ""}
-                language={language}
-                position="bottom"
-              />
-            </article>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function AccordionSection({
   title,

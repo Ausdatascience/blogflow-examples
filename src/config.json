@@ -1,0 +1,26 @@
+{
+  "title": "BlogFlow Showcase",
+  "description": "Latest articles powered by the BlogFlow SDK.",
+  "theme": "default",
+  "viewMode": "masonry",
+  "language": "en",
+  "paginationVariant": "simple",
+  "pageSize": 12,
+  "revalidateSeconds": 300,
+  "search": {
+    "enabled": true
+  },
+  "card": {
+    "borderWidth": 1,
+    "borderRadius": 1.25,
+    "borderColor": "#e5eaf1",
+    "shadow": 10
+  },
+  "content": {
+    "showExcerpt": true,
+    "showCategory": true,
+    "showDate": true,
+    "showListTitle": true,
+    "showCardTitle": true
+  }
+}
