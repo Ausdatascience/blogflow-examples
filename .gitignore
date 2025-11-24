@@ -40,5 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# admin
-/admin
+# admin panel (configuration tool, can be removed after setup)
+/src/app/admin
