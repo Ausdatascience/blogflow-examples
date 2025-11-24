@@ -20,10 +20,6 @@
 # production
 /build
 
-# misc
-.DS_Store
-*.pem
-
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -32,6 +28,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -40,5 +40,42 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# admin panel (configuration tool, can be removed after setup)
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Cache and temporary files
+.cache/
+.turbo/
+*.tmp
+*.temp
+.temp/
+*.log
+
+# Admin panel (configuration tool, can be removed after setup)
 /src/app/admin
+
+# Optional: uncomment if you want to ignore package-lock.json
+# package-lock.json
+
+# Optional: uncomment if you want to ignore yarn.lock
+# yarn.lock
